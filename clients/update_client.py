@@ -1,12 +1,17 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
-from df_config import init_oracle
+from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
 
@@ -27,23 +32,23 @@ def update_client(client_id):
     UPDATE
         CLIENTES
     SET
-        numeroCliente = :numeroCliente,
-        NOMBRE1 = :nombre1,
-        NOMBRE2 = :nombre2,
-        TELEFONO1 = :telefono1,
-        IDENTIFICACIONFISCAL = :identificacionFiscal,
-        FECHA = TO_DATE(:fecha, 'YYYY-MM-DD')
+        NUMEROCLIENTE = :NUMEROCLIENTE,
+        NOMBRE1 = :NOMBRE1,
+        NOMBRE2 = :NOMBRE2,
+        TELEFONO1 = :TELEFONO,
+        IDENTIFICACIONFISCAL = :IDENTIFICACIONFISCAL,
+        FECHA = TO_DATE(:FECHA, 'YYYY-MM-DD')
     WHERE
         IDCLIENTE = :client_id
     """
 
     params = {
-        'numeroCliente': data['numeroCliente'],
-        'nombre1': data['nombre1'],
-        'nombre2': data['nombre2'],
-        'telefono1': data['telefono1'],
-        'identificacionFiscal': data['identificacionFiscal'],
-        'fecha': data['fecha'],
+        'NUMEROCLIENTE': data['NUMEROCLIENTE'],
+        'NOMBRE1': data['NOMBRE1'],
+        'NOMBRE2': data['NOMBRE2'],
+        'TELEFONO': data['TELEFONO'],
+        'IDENTIFICACIONFISCAL': data['IDENTIFICACIONFISCAL'],
+        'FECHA': data['FECHA'],
         'client_id': client_id
     }
 

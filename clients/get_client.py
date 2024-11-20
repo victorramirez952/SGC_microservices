@@ -1,12 +1,17 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
-from df_config import init_oracle
+from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
 
@@ -18,7 +23,7 @@ function_error_handler(app)
 connection = init_oracle(app)
 
 @app.route('/api/clientes/<int:client_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_cliente(client_id):
     cursor = connection.cursor()
     query = """
@@ -30,13 +35,13 @@ def get_cliente(client_id):
         rows = cursor.fetchall()
         clients = [
             {
-                "idCliente": row[0],
-                "numeroCliente": row[1],
-                "nombre1": row[2],
-                "nombre2": row[3],
-                "telefono1": row[4],
-                "identificacionFiscal": row[5],
-                "fecha": row[6].strftime('%Y-%m-%d'),
+                "IDCLIENTE": row[0],
+                "NUMEROCLIENTE": row[1],
+                "NOMBRE1": row[2],
+                "NOMBRE2": row[3],
+                "TELEFONO": row[4],
+                "IDENTIFICACIONFISCAL": row[5],
+                "FECHA": row[6].strftime('%Y-%m-%d'),
             }
             for row in rows
         ]

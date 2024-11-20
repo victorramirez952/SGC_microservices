@@ -1,12 +1,17 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
-from df_config import init_oracle
+from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
 
@@ -27,7 +32,7 @@ def create_client():
     INSERT INTO CLIENTES
     (IDCLIENTE,NUMEROCLIENTE, NOMBRE1, NOMBRE2, TELEFONO1, IDENTIFICACIONFISCAL, FECHA)
     VALUES
-    (:idCliente, :numeroCliente, :nombre1, :nombre2, :telefono1, :identificacionFiscal, TO_DATE(:fecha, 'YYYY-MM-DD'))
+    (:IDCLIENTE, :NUMEROCLIENTE, :NOMBRE1, :NOMBRE2, :TELEFONO, :IDENTIFICACIONFISCAL, TO_DATE(:FECHA, 'YYYY-MM-DD'))
     """
 
     maxIdCliente = 0
@@ -42,34 +47,34 @@ def create_client():
         return jsonify({"message": "Error al obtener el ID máximo del cliente"}), 500
 
     params = {
-        'idCliente': maxIdCliente + 1,
-        'numeroCliente': data['numeroCliente'],
-        'nombre1': data['nombre1'],
-        'nombre2': data['nombre2'],
-        'telefono1': data['telefono1'],
-        'identificacionFiscal': data['identificacionFiscal'],
-        'fecha': data['fecha']
+        'IDCLIENTE': maxIdCliente + 1,
+        'NUMEROCLIENTE': data['NUMEROCLIENTE'],
+        'NOMBRE1': data['NOMBRE1'],
+        'NOMBRE2': data['NOMBRE2'],
+        'TELEFONO': data['TELEFONO'],
+        'IDENTIFICACIONFISCAL': data['IDENTIFICACIONFISCAL'],
+        'FECHA': data['FECHA']
     }
 
-    numeroClienteUnique = 0
+    NUMEROCLIENTEUnique = 0
     query2 = """
-    SELECT COUNT(*) FROM CLIENTES WHERE NUMEROCLIENTE = :numeroCliente
+    SELECT COUNT(*) FROM CLIENTES WHERE NUMEROCLIENTE = :NUMEROCLIENTE
     """
     try:
-        cursor.execute(query2, {'numeroCliente': data['numeroCliente']})
-        numeroClienteUnique = cursor.fetchone()[0]
+        cursor.execute(query2, {'NUMEROCLIENTE': data['NUMEROCLIENTE']})
+        NUMEROCLIENTEUnique = cursor.fetchone()[0]
 
-        if numeroClienteUnique > 0:
-            return jsonify({"message": "El numeroCliente ya existe"}), 400
+        if NUMEROCLIENTEUnique > 0:
+            return jsonify({"message": "El NUMEROCLIENTE ya existe"}), 400
 
     except Exception as e:
-        logging.error(f"Error al verificar numeroCliente único: {e}")
-        return jsonify({"message": "Error al verificar numeroCliente único"}), 500
+        logging.error(f"Error al verificar NUMEROCLIENTE único: {e}")
+        return jsonify({"message": "Error al verificar NUMEROCLIENTE único"}), 500
 
     try:
         cursor.execute(query, params)
         connection.commit()
-        return jsonify({"message": "Cliente registrado", "idCliente": maxIdCliente + 1}), 201
+        return jsonify({"message": "Cliente registrado", "IDCLIENTE": maxIdCliente + 1}), 201
     except Exception as e:
         logging.error(f"Error al registrar el cliente: {e}")
         return jsonify({"message": "Error al registrar el cliente"}), 500

@@ -1,14 +1,18 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
 from datetime import datetime
 
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
-from df_config import init_oracle
+from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
 

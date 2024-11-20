@@ -8,11 +8,13 @@ import os
 import sys
 from datetime import timedelta
 
-## Para poder importar el archivo de configuración 
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
-from df_config import init_oracle
-
 load_dotenv()
+
+## Para poder importar el archivo de configuración 
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
+from db_config import init_oracle
+
 
 app = Flask(__name__)
 CORS(app)
@@ -44,8 +46,8 @@ def create_token():
 
     cursor = connection.cursor()
     query = """
-    SELECT IDUSUARIO, IDCLIENTE, NOMBREUSUARIO, CORREO, PASSWORD_HASH FROM USUARIOS 
-    WHERE NOMBREUSUARIO = :username AND DBMS_LOB.SUBSTR(PASSWORD_HASH, 4000, 1) = :password
+    SELECT IDUSUARIO, IDCLIENTE, NOMBREUSUARIO, CORREO, PASSWORDHASH FROM USUARIOS 
+    WHERE NOMBREUSUARIO = :username AND DBMS_LOB.SUBSTR(PASSWORDHASH, 4000, 1) = :password
     """
     try:
         cursor.execute(query, username=username, password=password)

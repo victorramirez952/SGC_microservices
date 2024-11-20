@@ -7,7 +7,7 @@ import os
 import sys
 sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
 
-from df_config import init_oracle
+from db_config import init_oracle
 from datetime import datetime
 
 app = Flask(__name__)

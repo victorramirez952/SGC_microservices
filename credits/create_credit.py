@@ -7,7 +7,7 @@ import logging
 import sys
 sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
 
-from df_config import init_oracle
+from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
 
