@@ -23,7 +23,7 @@ def get_payments():
     cursor = connection.cursor()
     try: 
         # cursor.execute("SELECT * FROM (SELECT * FROM PAGOS ORDER BY dbms_random.value) WHERE ROWNUM <= 4")
-        cursor.execute("SELECT * FROM HISTORIALESCREDITICIOS ORDER BY IDCLIENTE")
+        cursor.execute("SELECT * FROM HISTORIALESCREDITOS ORDER BY IDCLIENTE")
         rows = cursor.fetchall()
         payments = [
             {

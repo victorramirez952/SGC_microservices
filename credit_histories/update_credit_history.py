@@ -1,15 +1,21 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
 from db_config import init_oracle
 from datetime import datetime
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -22,26 +28,27 @@ connection = init_oracle(app)
 @jwt_required()
 def update_credit_history(historial_id):
     data = request.get_json()
+    data = uppercase_keys(data)
 
     _today = datetime.now().strftime('%Y-%m-%d')
     
     cursor = connection.cursor()    
     query = """
-    UPDATE HISTORIALESCREDITICIOS SET
-        FECHACONSULTA = TO_DATE(:fechaConsulta, 'YYYY-MM-DD'),
-        FECHAINICIO = TO_DATE(:fechaInicio, 'YYYY-MM-DD'),
-        FECHAFIN = TO_DATE(:fechaFin, 'YYYY-MM-DD'),
-        NUMEROCREDITOSPAGADOS = :numeroCreditosPagados,
-        NUMEROCREDITOSATRASADOS = :numeroCreditosAtrasados
-    WHERE IDHISTORIAL = :idHistorial
+    UPDATE HISTORIALESCREDITOS SET
+        FECHACONSULTA = TO_DATE(:FECHACONSULTA, 'YYYY-MM-DD'),
+        FECHAINICIO = TO_DATE(:FECHAINICIO, 'YYYY-MM-DD'),
+        FECHAFIN = TO_DATE(:FECHAFIN, 'YYYY-MM-DD'),
+        NUMEROCREDITOSPAGADOS = :NUMEROCREDITOSPAGADOS,
+        NUMEROCREDITOSATRASADOS = :NUMEROCREDITOSATRASADOS
+    WHERE IDHISTORIAL = :historialId
     """
 
     ## ¿EL historial existe?
     query2 = """
-    SELECT IDHISTORIAL FROM HISTORIALESCREDITICIOS WHERE IDHISTORIAL = :idHistorial
+    SELECT IDHISTORIAL FROM HISTORIALESCREDITOS WHERE IDHISTORIAL = :historialId
     """
     try:
-        cursor.execute(query2, {'idHistorial': historial_id})
+        cursor.execute(query2, {'historialId': historial_id})
         historialExist = cursor.fetchone()
         if not historialExist:
             return jsonify({"message": "El historial no existe"}), 404
@@ -54,7 +61,7 @@ def update_credit_history(historial_id):
     SELECT IDCLIENTE FROM CLIENTES WHERE IDCLIENTE = :idCliente
     """
     try:
-        cursor.execute(query3, {'idCliente': data['idCliente']})
+        cursor.execute(query3, {'idCliente': data['IDCLIENTE']})
         clientExist = cursor.fetchone()
         if not clientExist:
             return jsonify({"message": "El cliente no existe"}), 404
@@ -64,13 +71,13 @@ def update_credit_history(historial_id):
     
 
     
-    ## Número de creditos atrasados (Creditos.idCliente == HistorialesCrediticios.idCliente) & (Creditos.fechaVencimiento < HistorialesCrediticios.fechaConsulta) & (Creditos.status = 'Activo')
+    ## Número de creditos atrasados (Creditos.idCliente == HISTORIALESCREDITOS.idCliente) & (Creditos.fechaVencimiento < HISTORIALESCREDITOS.FECHACONSULTA) & (Creditos.status = 'Activo')
     query4 = """
-    SELECT COUNT(*) FROM CREDITOS WHERE IDCLIENTE = :idCliente AND FECHAVENCIMIENTO < :fechaConsulta AND STATUS = 'Activo'
+    SELECT COUNT(*) FROM CREDITOS WHERE IDCLIENTE = :idCliente AND FECHAVENCIMIENTO < :FECHACONSULTA AND STATUS = 'Activo'
     """
     try:
-        cursor.execute(query4, {'idCliente': data['idCliente'], 'fechaConsulta': _today})
-        numeroCreditosAtrasados = cursor.fetchone()[0]
+        cursor.execute(query4, {'idCliente': data['IDCLIENTE'], 'FECHACONSULTA': _today})
+        NUMEROCREDITOSATRASADOS = cursor.fetchone()[0]
     except Exception as e:
         logging.error(f"Error al obtener el número de creditos atrasados: {e}")
         return jsonify({"message": "Error al obtener el número de creditos atrasados"}), 500
@@ -80,34 +87,34 @@ def update_credit_history(historial_id):
     SELECT COUNT(*) FROM CREDITOS WHERE IDCLIENTE = :idCliente AND STATUS = 'Inactivo'
     """
     try:
-        cursor.execute(query5, {'idCliente': data['idCliente']})
-        numeroCreditosPagados = cursor.fetchone()[0]
+        cursor.execute(query5, {'idCliente': data['IDCLIENTE']})
+        NUMEROCREDITOSPAGADOS = cursor.fetchone()[0]
     except Exception as e:
         logging.error(f"Error al obtener el número de creditos pagados: {e}")
         return jsonify({"message": "Error al obtener el número de creditos pagados"}), 500
     
     ## Damos formato a las fechas
     try:
-        fechaInicio = datetime.strptime(data['fechaInicio'], '%Y-%m-%d').strftime('%Y-%m-%d')
-        fechaFin = datetime.strptime(data['fechaFin'], '%Y-%m-%d').strftime('%Y-%m-%d')
+        FECHAINICIO = datetime.strptime(data['FECHAINICIO'], '%Y-%m-%d').strftime('%Y-%m-%d')
+        FECHAFIN = datetime.strptime(data['FECHAFIN'], '%Y-%m-%d').strftime('%Y-%m-%d')
     except ValueError as ve:
         logging.error(f"Error al convertir las fechas: {ve}")
         return jsonify({"message": "Formato de fecha inválido"}), 400
 
     ## Fecha de consulta será la fecha actual
     params = {
-        'idHistorial': historial_id,
-        'fechaConsulta': _today,
-        'fechaInicio': fechaInicio,
-        'fechaFin': fechaFin,
-        'numeroCreditosPagados': numeroCreditosPagados,
-        'numeroCreditosAtrasados': numeroCreditosAtrasados
+        'historialId': historial_id,
+        'FECHACONSULTA': _today,
+        'FECHAINICIO': FECHAINICIO,
+        'FECHAFIN': FECHAFIN,
+        'NUMEROCREDITOSPAGADOS': NUMEROCREDITOSPAGADOS,
+        'NUMEROCREDITOSATRASADOS': NUMEROCREDITOSATRASADOS
     }
 
     try:
         cursor.execute(query, params)
         connection.commit()
-        return jsonify({"message": "Historial crediticio modificado", "idHistorial": historial_id}), 201
+        return jsonify({"message": "Historial crediticio modificado", "historialId": historial_id}), 201
     except Exception as e:
         logging.error(f"Error al modificar el historial: {e}")
         return jsonify({"message": "Error al modificar el historial"}), 500

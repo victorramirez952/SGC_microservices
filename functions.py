@@ -22,3 +22,8 @@ def format_date_columns(rows, date_column_names):
         formatted_rows.append(formatted_row)
 
     return formatted_rows
+
+import pandas as pd
+
+def uppercase_keys(data):
+    return {key.upper(): value for key, value in data.items()}
