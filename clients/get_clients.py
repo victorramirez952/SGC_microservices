@@ -31,7 +31,7 @@ def inicio():
     return 'raiz de la app'
 
 @app.route('/api/clientes', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_clientes():
     try: 
         cursor = connection.cursor()

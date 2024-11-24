@@ -31,8 +31,8 @@ def create_credit_history():
     try:
         data = request.get_json()
         data = uppercase_keys(data)
-        _today = datetime.now().strftime('%d/%m/%y')
-        #Obtener atributos del cliente
+        _today = datetime.now().strftime('%Y-%m-%d')
+
         cursor = connection.cursor()
         query = """
         INSERT INTO HISTORIALESCREDITOS
@@ -70,17 +70,21 @@ def create_credit_history():
         
         ## Número de creditos atrasados (Creditos.IDCLIENTE == HISTORIALESCREDITOS.IDCLIENTE) & (Creditos.fechaVencimiento < HISTORIALESCREDITOS.FECHACONSULTA) & (Creditos.status = 'Activo')
         query4 = """
-        SELECT COUNT(*) FROM CREDITOS WHERE IDCLIENTE = :IDCLIENTE AND FECHAVENCIMIENTO < :FECHACONSULTA AND STATUS = 'activo'
+        SELECT COUNT(*) FROM CREDITOS 
+        WHERE IDCLIENTE = :IDCLIENTE 
+        AND FECHAVENCIMIENTO < TO_DATE(:FECHACONSULTA, 'YYYY-MM-DD') 
+        AND STATUS = 'activo'
         """
+
         try:
             print(f"SELECT COUNT(*) FROM CREDITOS WHERE IDCLIENTE = {data['IDCLIENTE']} AND FECHAVENCIMIENTO < {_today} AND STATUS = 'activo'")
             cursor.execute(query4, {'IDCLIENTE': data['IDCLIENTE'], 'FECHACONSULTA': _today})
-            NUMEROCREDITOSATRASADOS = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            NUMEROCREDITOSATRASADOS = result[0] if result else 0
         except Exception as e:
             logging.error(f"Error al obtener el número de creditos atrasados: {e}")
             return jsonify({"message": "Error al obtener el número de creditos atrasados"}), 500
 
-        ## Número de creditos pagados (Creditos.idCLiente = :IDCLIENTE) & (Creditos.status = 'Inactivo')
         query5 = """
         SELECT COUNT(*) FROM CREDITOS WHERE IDCLIENTE = :IDCLIENTE AND STATUS = 'inactivo'
         """
