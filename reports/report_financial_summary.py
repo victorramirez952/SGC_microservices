@@ -1,14 +1,20 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -44,9 +50,9 @@ def report_financial_summary():
         rows = cursor.fetchall()
         resumen = [
             {
-                 "idCliente": row[0],
-                 "totalCredito": row[1],
-                 "totalPago": row[2]
+                 "IDCLIENTE": row[0],
+                 "TOTALCREDITO": row[1],
+                 "TOTALPAGO": row[2]
             }
             for row in rows
         ]

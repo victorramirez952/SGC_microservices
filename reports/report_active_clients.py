@@ -1,19 +1,26 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
 jwt = init_config(app)
 function_error_handler(app)
+app.logger.setLevel(logging.INFO) 
 
 connection = init_oracle(app)
 
@@ -28,7 +35,7 @@ def report_active_clients():
         cl.NUMEROCLIENTE,
         cl.NOMBRE1,
         cl.NOMBRE2,
-        cl.TELEFONO1,
+        cl.TELEFONO,
         cl.IDENTIFICACIONFISCAL,
         cl.FECHA,
         cr.IDCREDITO,
@@ -45,19 +52,19 @@ def report_active_clients():
          
         cursor.execute(query)
         rows = cursor.fetchall()
+        logging.info(f"rowsCreditos: {rows}")
         resultados = [
             {
-               "idCliente": row[0],
-               "numeroCliente": row[1],
-               "nombre1": row[2],
-               "nombre2": row[3],
-               "telefono1": row[4],
-               "identificacionFiscal": row[5],
-               "fecha": row[6].strftime('%Y-%m-%d'),
-               "creditos": [
+               "IDCLIENTE": row[0],
+               "NUMEROCLIENTE": row[1],
+               "NOMBRE1": row[2],
+               "NOMBRE2": row[3],
+               "TELEFONO": row[4],
+               "IDENTIFICACIONFISCAL": row[5],
+               "CREDITOS": [
                     {
-                         "idCredito": row[7],
-                         "status": row[8]
+                         "IDCREDITO": row[7],
+                         "STATUS": row[8]
                     }
                ]
             }

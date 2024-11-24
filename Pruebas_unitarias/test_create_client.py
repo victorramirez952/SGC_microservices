@@ -20,7 +20,7 @@ def test_create_client(mock_verify_jwt, client):
         "nombre1": "CADAVID SIERRA JESUS MARIA",
         "nombre2": "**CONFITERIA EL PORVENIR**",
         "numeroCliente": 323,
-        "telefono1": "4-2895557"
+        "telefono": "4-2895557"
     }
     
     response = client.post('/api/clientes', json=data)

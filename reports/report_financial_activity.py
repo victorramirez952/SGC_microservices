@@ -1,19 +1,27 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+from datetime import datetime
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
 jwt = init_config(app)
 function_error_handler(app)
+app.logger.setLevel(logging.INFO) 
 
 connection = init_oracle(app)
 
@@ -43,15 +51,15 @@ def client_exist(client_id):
 @jwt_required()
 def create_financial_activity_report():
     data = request.get_json()
-
+    data = uppercase_keys(data)
     
-    if not client_exist(data['idCliente']):
+    if not client_exist(data['IDCLIENTE']):
         return jsonify({"message": "El cliente no existe"}), 404
     
     cursor = connection.cursor()
 
     queryCreditos = """
-    SELECT IDCREDITO, LIMITECREDITO, FECHAVENCIMIENTO, STATUS FROM creditos WHERE IDCLIENTE = :client_id
+    SELECT IDCREDITO, IDCLIENTE, LIMITECREDITO, FECHAVENCIMIENTO, STATUS FROM CREDITOS WHERE IDCLIENTE = :client_id
     """
     
     queryPagos = """
@@ -59,38 +67,42 @@ def create_financial_activity_report():
     """
 
     try:
-        cursor.execute(queryCreditos, {'client_id': data['idCliente']})
+        cursor.execute(queryCreditos, {'client_id': data['IDCLIENTE']})
         rowsCreditos = cursor.fetchall()
+        logging.info(f"rowsCreditos: {rowsCreditos}")
         creditos = [
             {
-                "idCredito": row[0],
-                "limiteCredito": row[1],
-                "fechaVencimiento": row[2].strftime('%Y-%m-%d'),
-                "status": row[3]
+                "IDCREDITO": row[0],
+                "IDCLIENTE": row[1],
+                "LIMITECREDITO": row[2],
+                "FECHAVENCIMIENTO": row[3].strftime('%Y-%m-%d'),
+                "STATUS": row[4]
             }
             for row in rowsCreditos
         ]
+        # date_column_names = ["FECHA"]
+        # creditos = format_date_columns(rowsCreditos, date_column_names)
 
-        cursor.execute(queryPagos, {'client_id': data['idCliente']})
+        cursor.execute(queryPagos, {'client_id': data['IDCLIENTE']})
         rowsPagos = cursor.fetchall()
         pagos = [
             {
-                "idPago": row[0],
-                "idCredito": row[1],
-                "fecha": row[2].strftime('%Y-%m-%d'),
-                "cantidad": row[3],
-                "idMetodoPago": row[4]
+                "IDPAGO": row[0],
+                "IDCREDITO": row[1],
+                "FECHA": row[2].strftime('%Y-%m-%d'),
+                "CANTIDAD": row[3],
+                "IDMETODOPAGO": row[4]
             }
             for row in rowsPagos
         ]
 
         reporte = {
-            "idCliente": data['idCliente'],
-            "creditos": creditos,
-            "pagos": pagos
+            "IDCLIENTE": data['IDCLIENTE'],
+            "CREDITOS": creditos,
+            "PAGOS": pagos
         }
 
-        return jsonify({"message": "REporte realizado correctamente", "reporte": reporte}), 201
+        return jsonify({"message": "Reporte realizado correctamente", "reporte": reporte}), 201
     except Exception as e:
         logging.error(f"Error al realizar el reporte: {e}")
         return jsonify({"message": "Error al realizar el reporte"}), 500
