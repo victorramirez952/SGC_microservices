@@ -20,13 +20,13 @@ services = [
     # {"file": "credit_histories/create_credit_history", "port": 5010},
     # {"file": "credit_histories/update_credit_history", "port": 5011},
     # {"file": "credit_histories/delete_credit_history", "port": 5012}
-    {"file": "credits/get_credits", "port": 5013},
-    {"file": "credits/get_client_credits", "port": 5014},
-    {"file": "credits/create_credit", "port": 5015},
-    {"file": "credits/update_credit", "port": 5016}
-    # {"file": "payments/get_payments_history", "port": 5017},
-    # {"file": "payments/create_payment", "port": 5018},
-    # {"file": "payments/get_payments", "port": 5019},
+    # {"file": "credits/get_credits", "port": 5013},
+    # {"file": "credits/get_client_credits", "port": 5014},
+    # {"file": "credits/create_credit", "port": 5015},
+    # {"file": "credits/update_credit", "port": 5016},
+    {"file": "payments/get_payments_history", "port": 5017},
+    {"file": "payments/create_payment", "port": 5018},
+    {"file": "payments/get_payments", "port": 5019}
     # {"file": "reports/report_overdue_credits", "port": 5020},
     # {"file": "reports/report_active_clients", "port": 5021},
     # {"file": "reports/report_financial_activity", "port": 5022},

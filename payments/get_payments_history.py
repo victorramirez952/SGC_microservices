@@ -1,14 +1,20 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -55,11 +61,11 @@ def get_payments_history(client_id):
         rows = cursor.fetchall()
         payments = [
             {
-                'idPago': row[0],
-                'idCredito': row[1],
-                'fecha': row[2].strftime('%Y-%m-%d'),
-                'cantidad': row[3],
-                'idMetodoPago': row[4]
+                'IDPAGO': row[0],
+                'IDCREDITO': row[1],
+                'FECHA': row[2].strftime('%Y-%m-%d'),
+                'CANTIDAD': row[3],
+                'IDMETODOPAGO': row[4]
             }
             for row in rows
         ]
