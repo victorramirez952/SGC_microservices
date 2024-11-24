@@ -14,6 +14,7 @@ sys.path.append(f'{main_path}')
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -26,11 +27,12 @@ connection = init_oracle(app)
 @jwt_required()
 def create_client():
     data = request.get_json()
-    #Obtener atributos del cliente
+    data = uppercase_keys(data)
+    logging.info(f"Datos: {data}")
     cursor = connection.cursor()
     query = """
     INSERT INTO CLIENTES
-    (IDCLIENTE,NUMEROCLIENTE, NOMBRE1, NOMBRE2, TELEFONO1, IDENTIFICACIONFISCAL, FECHA)
+    (IDCLIENTE,NUMEROCLIENTE, NOMBRE1, NOMBRE2, TELEFONO, IDENTIFICACIONFISCAL, FECHA)
     VALUES
     (:IDCLIENTE, :NUMEROCLIENTE, :NOMBRE1, :NOMBRE2, :TELEFONO, :IDENTIFICACIONFISCAL, TO_DATE(:FECHA, 'YYYY-MM-DD'))
     """

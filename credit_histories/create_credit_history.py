@@ -41,18 +41,18 @@ def create_credit_history():
         (:IDCLIENTE, TO_DATE(:FECHACONSULTA, 'YYYY-MM-DD'), TO_DATE(:FECHAINICIO, 'YYYY-MM-DD'), TO_DATE(:FECHAFIN, 'YYYY-MM-DD'), :NUMEROCREDITOSPAGADOS, :NUMEROCREDITOSATRASADOS)
         """
 
-        # maxIdHistory = 0
-        # query2 = """
-        # SELECT MAX(IDHISTORIAL) FROM HISTORIALESCREDITOS
-        # """
-        # try:
-        #     cursor.execute(query2)
-        #     result = cursor.fetchone()
-        #     maxIdHistory = 1 if result is None or result[0] is None else result[0]
-        #     print("maxIdHistory", maxIdHistory)
-        # except Exception as e:
-        #     logging.error(f"Error al obtener el ID máximo de los historiales: {e}")
-        #     return jsonify({"message": "Error al obtener el ID máximo de los historiales"}), 500
+        maxIdHistory = 0
+        query2 = """
+        SELECT MAX(IDHISTORIAL) FROM HISTORIALESCREDITOS
+        """
+        try:
+            cursor.execute(query2)
+            result = cursor.fetchone()
+            maxIdHistory = 1 if result is None or result[0] is None else result[0]
+            print("maxIdHistory", maxIdHistory)
+        except Exception as e:
+            logging.error(f"Error al obtener el ID máximo de los historiales: {e}")
+            return jsonify({"message": "Error al obtener el ID máximo de los historiales"}), 500
             
         
         ## ¿El cliente existe?
@@ -114,7 +114,7 @@ def create_credit_history():
         try:
             cursor.execute(query, params)
             connection.commit()
-            return jsonify({"message": "Historial crediticio registrado"}), 201
+            return jsonify({"message": "Historial crediticio registrado", "IDHISTORIAL": maxIdHistory}), 201
         except Exception as e:
             logging.error(f"Error al registrar el historial: {e}")
             return jsonify({"message": "Error al registrar el historial"}), 500
