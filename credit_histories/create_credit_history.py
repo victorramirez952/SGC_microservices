@@ -114,7 +114,7 @@ def create_credit_history():
         try:
             cursor.execute(query, params)
             connection.commit()
-            return jsonify({"message": "Historial crediticio registrado", "IDHISTORIAL": maxIdHistory}), 201
+            return jsonify({"message": "Historial crediticio registrado", "IDHISTORIAL": maxIdHistory + 1}), 201
         except Exception as e:
             logging.error(f"Error al registrar el historial: {e}")
             return jsonify({"message": "Error al registrar el historial"}), 500
