@@ -14,6 +14,7 @@ sys.path.append(f'{main_path}')
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -35,7 +36,7 @@ def update_client(client_id):
         NUMEROCLIENTE = :NUMEROCLIENTE,
         NOMBRE1 = :NOMBRE1,
         NOMBRE2 = :NOMBRE2,
-        TELEFONO1 = :TELEFONO,
+        TELEFONO = :TELEFONO,
         IDENTIFICACIONFISCAL = :IDENTIFICACIONFISCAL,
         FECHA = TO_DATE(:FECHA, 'YYYY-MM-DD')
     WHERE

@@ -14,6 +14,7 @@ load_dotenv()
 main_path = os.getenv('MAIN_DIRECTORY_PATH')
 sys.path.append(f'{main_path}')
 from db_config import init_oracle
+from functions import *
 
 
 app = Flask(__name__)
@@ -39,9 +40,10 @@ def index():
 @app.route("/api/login", methods=["POST"])
 def create_token():
     data = request.get_json()
-    username = data.get('nombreUsuario')
-    password = data.get('password_Hash')
-    if not username or not password:
+    data = uppercase_keys(data)
+    logging.info(f"Datos: {data}")
+    logging.error(f"Datos: {data}")
+    if not data['NOMBREUSUARIO'] or not data['PASSWORD']:
         return jsonify({"message": "Faltan credenciales"}), 401
 
     cursor = connection.cursor()
@@ -50,7 +52,7 @@ def create_token():
     WHERE NOMBREUSUARIO = :username AND DBMS_LOB.SUBSTR(PASSWORDHASH, 4000, 1) = :password
     """
     try:
-        cursor.execute(query, username=username, password=password)
+        cursor.execute(query, username=data['NOMBREUSUARIO'], password=data['PASSWORD'])
         user = cursor.fetchone()
         if not user:
             return jsonify({"message": "Usuario o contrasenia incorrectos"}), 401

@@ -1,14 +1,21 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
+
 
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -21,23 +28,20 @@ connection = init_oracle(app)
 @jwt_required()
 def get_credits():
     cursor = connection.cursor()
-    query = """
-    SELECT * FROM CREDITOS
-    """
-    # query = """
-    # SELECT * FROM (SELECT * FROM CREDITOS ORDER BY dbms_random.value) WHERE ROWNUM <= 4
-    # """
+    # query = """SELECT * FROM CREDITOS"""
+    query = """" SELECT * FROM (SELECT * FROM CREDITOS ORDER BY IDCREDITO) WHERE ROWNUM <= 24"""
+    # query = """SELECT * FROM (SELECT * FROM CREDITOS ORDER BY dbms_random.value) WHERE ROWNUM <= 4"""
     try:
          
         cursor.execute(query)
         rows = cursor.fetchall()
         credits = [
             {
-                "idCredito": row[0],
-                "idCliente": row[1],
-                "limiteCredito": row[2],
-                "fechaVencimiento": row[3].strftime('%Y-%m-%d'),
-                "status": row[4]
+                "IDCREDITO": row[0],
+                "IDCLIENTE": row[1],
+                "LIMITECREDITO": row[2],
+                "FECHAVENCIMIENTO": row[3].strftime('%Y-%m-%d'),
+                "STATUS": row[4]
             }
             for row in rows
         ]

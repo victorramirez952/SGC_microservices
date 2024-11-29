@@ -1,15 +1,20 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
 
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -60,8 +65,9 @@ def get_max_id_credit():
 @jwt_required()
 def create_credit():
     data = request.get_json()
+    data = uppercase_keys(data)
 
-    if not client_exist(data['idCliente']):
+    if not client_exist(data['IDCLIENTE']):
         return jsonify({"message": "El cliente no existe"}), 404
 
 
@@ -70,23 +76,23 @@ def create_credit():
     INSERT INTO CREDITOS
     (IDCREDITO, IDCLIENTE, LIMITECREDITO, FECHAVENCIMIENTO, STATUS)
     VALUES
-    (:idCredito, :idCliente, :limiteCredito, TO_DATE(:fechaVencimiento, 'YYYY-MM-DD'), :status)
+    (:IDCREDITO, :IDCLIENTE, :LIMITECREDITO, TO_DATE(:FECHAVENCIMIENTO, 'YYYY-MM-DD'), :STATUS)
     """
 
     maxIdCredit = get_max_id_credit()
 
     params = {
-        'idCredito': maxIdCredit + 1,
-        'idCliente': data['idCliente'],
-        'limiteCredito': data['limiteCredito'],
-        'fechaVencimiento': data['fechaVencimiento'],
-        'status': data.get('status', 'activo')
+        'IDCREDITO': maxIdCredit + 1,
+        'IDCLIENTE': data['IDCLIENTE'],
+        'LIMITECREDITO': data['LIMITECREDITO'],
+        'FECHAVENCIMIENTO': data['FECHAVENCIMIENTO'],
+        'STATUS': data.get('STATUS', 'activo')
     }
 
     try:
         cursor.execute(query, params)
         connection.commit()
-        return jsonify({"message": "Credito registrado", "idCredito": maxIdCredit + 1}), 201
+        return jsonify({"message": "Credito registrado", "IDCREDITO": maxIdCredit + 1}), 201
     except Exception as e:
         logging.error(f"Error al registrar el credito: {e}")
         return jsonify({"message": "Error al registrar el credito"}), 500

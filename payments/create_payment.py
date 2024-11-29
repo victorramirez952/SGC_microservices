@@ -1,15 +1,21 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
 from datetime import datetime
 
+load_dotenv()
+
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
 from db_config import init_oracle
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -80,7 +86,7 @@ def get_max_id_payment():
 def get_id_method_payment(method):
     cursor = connection.cursor()
     query = """
-    SELECT IDMETODOPAGO FROM METODOSPAGOS WHERE CODPAGO = :method
+    SELECT IDMETODOPAGO FROM METODOSPAGOS WHERE CPAG = :method
     """
     try:
         cursor.execute(query, {'method': method})
@@ -120,15 +126,16 @@ def update_credit_status(credit_id):
 @jwt_required()
 def create_payment():
     data = request.get_json()
+    data = uppercase_keys(data)
     
-    if not credit_exist(data['idCredito']):
+    if not credit_exist(data['IDCREDITO']):
         return jsonify({"message": "El crédito no existe"}), 404
     
-    idMethodPayment = get_id_method_payment(data['metodoPago'])
+    idMethodPayment = get_id_method_payment(data['METODOPAGO'])
     if not idMethodPayment:
         return jsonify({"message": "El método de pago no existe"}), 404
 
-    if not valid_amount(data['cantidad']):
+    if not valid_amount(data['CANTIDAD']):
         return jsonify({"message": "Cantidad inválida"}), 400
     
     maxIdPayment = get_max_id_payment()
@@ -139,36 +146,36 @@ def create_payment():
     INSERT INTO PAGOS
     (IDPAGO, IDCREDITO, FECHA, CANTIDAD, IDMETODOPAGO)
     VALUES
-    ( :idPago, :idCredito, TO_DATE(:fecha, 'YYYY-MM-DD'), :cantidad, :idMetodoPago)
+    ( :IDPAGO, :IDCREDITO, TO_DATE(:FECHA, 'YYYY-MM-DD'), :CANTIDAD, :IDMETODOPAGO)
     """
 
-    ## Damos formato a las fecha
+    ## Damos formato a las FECHA
     try:
-        if data['fecha']:
-            fecha = datetime.strptime(data['fecha'], '%Y-%m-%d').strftime('%Y-%m-%d')
+        if data['FECHA']:
+            FECHA = datetime.strptime(data['FECHA'], '%Y-%m-%d').strftime('%Y-%m-%d')
         else:
-            fecha = datetime.now().strftime('%Y-%m-%d')
-    except ValueError as ve:
-        logging.error(f"Error al convertir las fechas: {ve}")
-        return jsonify({"message": "Formato de fecha inválido"}), 400
+            FECHA = datetime.now().strftime('%Y-%m-%d')
+    except Exception as e:
+        logging.error(f"Error al convertir las FECHAs: {e}")
+        return jsonify({"message": "Hubo un error al convertir las FECHAs"}), 400
 
     params = {
-        'idPago': maxIdPayment + 1,
-        'idCredito': data['idCredito'],
-        'fecha': fecha,
-        'cantidad': data['cantidad'],
-        'idMetodoPago': idMethodPayment
+        'IDPAGO': maxIdPayment + 1,
+        'IDCREDITO': data['IDCREDITO'],
+        'FECHA': FECHA,
+        'CANTIDAD': data['CANTIDAD'],
+        'IDMETODOPAGO': idMethodPayment
     }
 
     try:
         cursor.execute(query, params)
 
         ## Actualizamos el status del crédito
-        update_credit_status(data['idCredito'])
+        update_credit_status(data['IDCREDITO'])
 
         connection.commit()
         
-        return jsonify({"message": "Pago registrado", "idPago": maxIdPayment + 1}), 201
+        return jsonify({"message": "Pago registrado", "IDPAGO": maxIdPayment + 1}), 201
     except Exception as e:
         logging.error(f"Error al registrar el pago: {e}")
         return jsonify({"message": "Error al registrar el pago"}), 500

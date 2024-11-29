@@ -1,15 +1,21 @@
 from flask import Flask, Response, jsonify, request, abort
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
+from dotenv import load_dotenv
 import logging
+import os
+
+load_dotenv()
 
 import sys
-sys.path.append('/home/ec2-user/Proyecto/Svelte/Services')
+main_path = os.getenv('MAIN_DIRECTORY_PATH')
+sys.path.append(f'{main_path}')
 
 from db_config import init_oracle
 from datetime import datetime
 from jwt_settings import init_config
 from error_handlers import function_error_handler
+from functions import *
 
 app = Flask(__name__)
 CORS(app)
@@ -64,8 +70,9 @@ def credit_exist(credit_id):
 @jwt_required()
 def update_credit(credit_id):
     data = request.get_json()
+    data = uppercase_keys(data)
 
-    if not client_exist(data['idCliente']):
+    if not client_exist(data['IDCLIENTE']):
         return jsonify({"message": "El cliente no existe"}), 404
     
     if not credit_exist(credit_id):
@@ -75,30 +82,30 @@ def update_credit(credit_id):
     cursor = connection.cursor()    
     query = """
     UPDATE CREDITOS SET
-        LIMITECREDITO = :limiteCredito,
-        FECHAVENCIMIENTO = TO_DATE(:fechaVencimiento, 'YYYY-MM-DD'),
-        STATUS = :status
-    WHERE IDCREDITO = :idCredito
+        LIMITECREDITO = :LIMITECREDITO,
+        FECHAVENCIMIENTO = TO_DATE(:FECHAVENCIMIENTO, 'YYYY-MM-DD'),
+        STATUS = :STATUS
+    WHERE IDCREDITO = :IDCREDITO
     """
     
     ## Damos formato a las fecha
     try:
-        fechaVencimiento = datetime.strptime(data['fechaVencimiento'], '%Y-%m-%d').strftime('%Y-%m-%d')
+        FECHAVENCIMIENTO = datetime.strptime(data['FECHAVENCIMIENTO'], '%Y-%m-%d').strftime('%Y-%m-%d')
     except ValueError as ve:
         logging.error(f"Error al convertir las fechas: {ve}")
         return jsonify({"message": "Formato de fecha inválido"}), 400
 
     params = {
-        'idCredito': credit_id,
-        'limiteCredito': data['limiteCredito'],
-        'fechaVencimiento': fechaVencimiento,
-        'status': data.get('status', 'activo')
+        'IDCREDITO': credit_id,
+        'LIMITECREDITO': data['LIMITECREDITO'],
+        'FECHAVENCIMIENTO': FECHAVENCIMIENTO,
+        'STATUS': data.get('STATUS', 'activo')
     }
 
     try:
         cursor.execute(query, params)
         connection.commit()
-        return jsonify({"message": "Credito modificado", "idCredito": credit_id}), 201
+        return jsonify({"message": "Credito modificado", "IDCREDITO": credit_id}), 201
     except Exception as e:
         logging.error(f"Error al modificar el credito: {e}")
         return jsonify({"message": "Error al modificar el credito"}), 500

@@ -31,11 +31,11 @@ def inicio():
     return 'raiz de la app'
 
 @app.route('/api/clientes', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_clientes():
     try: 
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM (SELECT * FROM CLIENTES ORDER BY dbms_random.value) WHERE ROWNUM <= 4")
+        cursor.execute("SELECT * FROM (SELECT * FROM CLIENTES ORDER BY IDCLIENTE) WHERE ROWNUM <= 24")
         # cursor.execute("SELECT * FROM CLIENTES ORDER BY IDCLIENTE")
         clientes = cursor.fetchall()
 
