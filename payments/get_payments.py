@@ -26,6 +26,7 @@ connection = init_oracle(app)
 @app.route('/api/pagos', methods=['GET'])
 @jwt_required()
 def get_payments():
+    query = """SELECT * FROM (SELECT * FROM PAGOS ORDER BY IDPAGO) WHERE ROWNUM <= 24 """
     query = """SELECT * FROM (SELECT * FROM PAGOS ORDER BY dbms_random.value) WHERE ROWNUM <= 4"""
     # query = """SELECT * FROM PAGOS ORDER BY IDCLIENTE"""
     try: 

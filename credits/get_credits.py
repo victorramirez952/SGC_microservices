@@ -29,7 +29,8 @@ connection = init_oracle(app)
 def get_credits():
     cursor = connection.cursor()
     # query = """SELECT * FROM CREDITOS"""
-    query = """SELECT * FROM (SELECT * FROM CREDITOS ORDER BY dbms_random.value) WHERE ROWNUM <= 4"""
+    query = """" SELECT * FROM (SELECT * FROM CREDITOS ORDER BY IDCREDITO) WHERE ROWNUM <= 24"""
+    # query = """SELECT * FROM (SELECT * FROM CREDITOS ORDER BY dbms_random.value) WHERE ROWNUM <= 4"""
     try:
          
         cursor.execute(query)
